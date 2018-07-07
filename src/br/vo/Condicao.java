@@ -1,7 +1,7 @@
-package br.com.proway.dao;
+package br.vo;
 
-import br.com.proway.util.StringUtil;
-import br.com.proway.enumeradores.Comando;
+import br.enumeradores.Comando;
+import br.util.StringUtil;
 
 /**
  * @author Vinícius Luis da Silva
