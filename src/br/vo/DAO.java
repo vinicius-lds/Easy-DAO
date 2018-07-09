@@ -10,10 +10,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 /**
+ * Classe de fácil uso, que realiza várias operações com MySQL, incluindo criar coleções e mapas com comandos SELECT
  * @author Vinícius Luis da Silva
  */
 public class DAO {
@@ -22,6 +22,13 @@ public class DAO {
     private final String PASSWORD;
     private final String URL;
 
+    /**
+     * Cria uma insatancia da classe DAO, que tem como objetivo facilitar o uso do Banco de Dados MySQL
+     * @param username Nome do usuario para conexão com o Banco de Dados desejado
+     * @param password Senha para conexão com o Banco de Dados desejado
+     * @param url Url para conexão com o Banco de Dados desejado
+     * @throws SQLException Quando não for possível estabelecer a conexão com o Banco de Dados
+     */
     public DAO(String username, String password, String url) throws SQLException {
         this.USERNAME = username;
         this.PASSWORD = password;
@@ -190,10 +197,40 @@ public class DAO {
         rs.close();
         return map;
     }
-
+    
     /**
      * Será executado um comando do tipo SELECT no banco de dados definido nesse objeto DAO.
-     * @param mapa Enum representando o tipo de mapa que será retornado com os resultados. (Casting necessário)
+     * <br><br>
+     * <b>ATENÇÃO: A Primary Key deve ser a primeira coluna na tabela, caso contrário poderá ocorrer uma exception ou o Mapa final pode não ser o esperado!</b>
+     * @param mapa Instancia de Map ao qual será adicionado o resultados da pesquisa. O conteúdo que por ventura já estiver no mapa continurá lá, 
+     * será somente adicionado novas chaves nele, portanto certifique-se de que não tenha chaves conflitantes com as do resultado da pesquisa.
+     * Caso tenha, a chave existente antes da consulta será substituida.Certifique-se também de que o mapa tenha um handle <Object, Object[]>
+     * @param colunas Vetor com o nome das colunas que serão pesquisadas
+     * @param tabela Nome da tabela que será feita a consulta
+     * @param condicao Condicao que será aplicada na consulta
+     * @return Um Map da sua escolha tendo como Primary Key o rgistro na primeira coluna da tabela, e como conteudo um vetor de objetos com os registros
+     * @throws SQLException Caso ocorreu algo de errado na consulta
+     */
+    public Map<Object, Object[]> select(Map mapa, String[] colunas, String tabela, Condicao condicao) throws SQLException {
+        ResultSet rs = this.select(colunas, tabela, condicao);
+        Object[] row;
+        int collumnCount = rs.getMetaData().getColumnCount();
+        while (rs.next()) {
+            row = new Object[collumnCount - 1];
+            for (int coluna = 2, i = 0; coluna <= collumnCount; coluna++, i++) {
+                row[i] = rs.getObject(coluna);
+            }
+            mapa.put(rs.getObject(1), row);
+        }
+        rs.close();
+        return mapa;
+    }
+    
+    /**
+     * Será executado um comando do tipo SELECT no banco de dados definido nesse objeto DAO.
+     * @param mapa Instancia de Map ao qual será adicionado o resultados da pesquisa. O conteúdo que por ventura já estiver no mapa continurá lá, 
+     * será somente adicionado novas chaves nele, portanto certifique-se de que não tenha chaves conflitantes com as do resultado da pesquisa.
+     * Caso tenha, a chave existente antes da consulta será substituida.Certifique-se também de que o mapa tenha um handle <Object, Object[]>
      * @param primaryKey O nome da coluna definida como Primary Key
      * @param colunas Vetor com o nome das colunas que serão pesquisadas
      * @param tabela Nome da tabela que será feita a consulta
@@ -201,16 +238,15 @@ public class DAO {
      * @return Um Map da sua escolha tendo como Primary Key o rgistro na primeira coluna da tabela, e como conteudo um vetor de objetos com os registros
      * @throws SQLException Caso ocorreu algo de errado na consulta
      */
-    public Map<Object, Object[]> select(Mapa mapa, String primaryKey, String[] colunas, String tabela, Condicao condicao) throws SQLException {
+    public Map<Object, Object[]> select(Map mapa, String primaryKey, String[] colunas, String tabela, Condicao condicao) throws SQLException {
         ResultSet rs = this.select(colunas, tabela, condicao);
-        Map<Object, Object[]> map = MapFactory.get(mapa);
         if(!rs.next()) {
-            return map;
+            return mapa;
         }
         Object[] row;
         ResultSetMetaData metaData = rs.getMetaData();
         int collumnCount = metaData.getColumnCount();
-        int pk = this.getPrimaryKey(rs, metaData, collumnCount, primaryKey);
+        int pk = this.getPrimaryKey(metaData, collumnCount, primaryKey);
         do {
             row = new Object[collumnCount - 1];
             for (int coluna = 1, i = 0; coluna <= collumnCount; coluna++, i++) {
@@ -220,15 +256,17 @@ public class DAO {
                 }
                 row[i] = rs.getObject(coluna);
             }
-            map.put(rs.getObject(pk), row);
+            mapa.put(rs.getObject(pk), row);
         } while (rs.next());
         rs.close();
-        return map;
+        return mapa;
     }
     
     /**
      * Será executado um comando do tipo SELECT no banco de dados definido nesse objeto DAO.
-     * @param mapa Enum representando o tipo de mapa que será retornado com os resultados. (Casting necessário)
+     * @param mapa Instancia de Map ao qual será adicionado o resultados da pesquisa. O conteúdo que por ventura já estiver no mapa continurá lá, 
+     * será somente adicionado novas chaves nele, portanto certifique-se de que não tenha chaves conflitantes com as do resultado da pesquisa.
+     * Caso tenha, a chave existente antes da consulta será substituida.Certifique-se também de que o mapa tenha um handle <Object, Object[]>
      * @param primaryKey O indice definida como Primary Key. O índice é calculdado como no Banco de Dados, ou seja, ele começa no 1, e não no0
      * @param colunas Vetor com o nome das colunas que serão pesquisadas
      * @param tabela Nome da tabela que será feita a consulta
@@ -236,9 +274,8 @@ public class DAO {
      * @return Um Map da sua escolha tendo como Primary Key o rgistro na primeira coluna da tabela, e como conteudo um vetor de objetos com os registros
      * @throws SQLException Caso ocorreu algo de errado na consulta
      */
-    public Map<Object, Object[]> select(Mapa mapa, int primaryKey, String[] colunas, String tabela, Condicao condicao) throws SQLException {
+    public Map<Object, Object[]> select(Map mapa, int primaryKey, String[] colunas, String tabela, Condicao condicao) throws SQLException {
         ResultSet rs = this.select(colunas, tabela, condicao);
-        Map<Object, Object[]> map = MapFactory.get(mapa);
         Object[] row;
         int collumnCount = rs.getMetaData().getColumnCount();
         while (rs.next()) {
@@ -250,10 +287,10 @@ public class DAO {
                 }
                 row[i] = rs.getObject(coluna);
             }
-            map.put(rs.getObject(primaryKey), row);
+            mapa.put(rs.getObject(primaryKey), row);
         }
         rs.close();
-        return map;
+        return mapa;
     }
     
     /**
@@ -314,6 +351,34 @@ public class DAO {
      */
     public Collection<Object[]> select(Colecao collection, String tabela) throws SQLException {
         return this.select(collection, null, tabela, null);
+    }
+    
+    /**
+     * Será executado um comando do tipo SELECT no banco de dados definido nesse objeto DAO.
+     * @param mapa Enum representando o tipo de mapa que será retornado com os resultados. (Casting necessário)
+     * @param primaryKey O nome da coluna definida como Primary Key
+     * @param colunas Vetor com o nome das colunas que serão pesquisadas
+     * @param tabela Nome da tabela que será feita a consulta
+     * @param condicao Condicao que será aplicada na consulta
+     * @return Um Map da sua escolha tendo como Primary Key o rgistro na primeira coluna da tabela, e como conteudo um vetor de objetos com os registros
+     * @throws SQLException Caso ocorreu algo de errado na consulta
+     */
+    public Map<Object, Object[]> select(Mapa mapa, String primaryKey, String[] colunas, String tabela, Condicao condicao) throws SQLException {
+        return this.select(MapFactory.get(mapa), primaryKey, colunas, tabela, condicao);
+    }
+    
+    /**
+     * Será executado um comando do tipo SELECT no banco de dados definido nesse objeto DAO.
+     * @param mapa Enum representando o tipo de mapa que será retornado com os resultados. (Casting necessário)
+     * @param primaryKey O indice definida como Primary Key. O índice é calculdado como no Banco de Dados, ou seja, ele começa no 1, e não no0
+     * @param colunas Vetor com o nome das colunas que serão pesquisadas
+     * @param tabela Nome da tabela que será feita a consulta
+     * @param condicao Condicao que será aplicada na consulta
+     * @return Um Map da sua escolha tendo como Primary Key o rgistro na primeira coluna da tabela, e como conteudo um vetor de objetos com os registros
+     * @throws SQLException Caso ocorreu algo de errado na consulta
+     */
+    public Map<Object, Object[]> select(Mapa mapa, int primaryKey, String[] colunas, String tabela, Condicao condicao) throws SQLException {
+        return this.select(MapFactory.get(mapa), primaryKey, colunas, tabela, condicao);
     }
     
     /**
@@ -420,6 +485,125 @@ public class DAO {
     }
     
     /**
+     * Será executado um comando do tipo SELECT no banco de dados definido nesse objeto DAO.
+     * <br><br>
+     * <b>ATENÇÃO: A Primary Key deve ser a primeira coluna na tabela, caso contrário poderá ocorrer uma exception ou o Mapa final pode não ser o esperado!</b>
+     * @param mapa Instancia de Map ao qual será adicionado o resultados da pesquisa. O conteúdo que por ventura já estiver no mapa continurá lá, 
+     * será somente adicionado novas chaves nele, portanto certifique-se de que não tenha chaves conflitantes com as do resultado da pesquisa.
+     * Caso tenha, a chave existente antes da consulta será substituida.Certifique-se também de que o mapa tenha um handle <Object, Object[]>
+     * @param tabela Nome da tabela que será feita a consulta
+     * @param condicao Condicao que será aplicada na consulta
+     * @return Um Map da sua escolha tendo como Primary Key o rgistro na primeira coluna da tabela, e como conteudo um vetor de objetos com os registros
+     * @throws SQLException Caso ocorreu algo de errado na consulta
+     */
+    public Map<Object, Object[]> select(Map mapa, String tabela, Condicao condicao) throws SQLException {
+        return this.select(mapa, (String[])null, tabela, condicao);
+    }
+
+    /**
+     * Será executado um comando do tipo SELECT no banco de dados definido nesse objeto DAO.
+     * <br><br>
+     * <b>ATENÇÃO: A Primary Key deve ser a primeira coluna na tabela, caso contrário poderá ocorrer uma exception ou o Mapa final pode não ser o esperado!</b>
+     * @param mapa Instancia de Map ao qual será adicionado o resultados da pesquisa. O conteúdo que por ventura já estiver no mapa continurá lá, 
+     * será somente adicionado novas chaves nele, portanto certifique-se de que não tenha chaves conflitantes com as do resultado da pesquisa.
+     * Caso tenha, a chave existente antes da consulta será substituida.Certifique-se também de que o mapa tenha um handle <Object, Object[]>
+     * @param tabela Nome da tabela que será feita a consulta
+     * @return Um Map da sua escolha tendo como Primary Key o rgistro na primeira coluna da tabela, e como conteudo um vetor de objetos com os registros
+     * @throws SQLException Caso ocorreu algo de errado na consulta
+     */
+    public Map<Object, Object[]> select(Map mapa, String tabela) throws SQLException {
+        return this.select(mapa, (String[])null, tabela, null);
+    }
+    
+    /**
+     * Será executado um comando do tipo SELECT no banco de dados definido nesse objeto DAO.
+     * @param mapa Instancia de Map ao qual será adicionado o resultados da pesquisa. O conteúdo que por ventura já estiver no mapa continurá lá, 
+     * será somente adicionado novas chaves nele, portanto certifique-se de que não tenha chaves conflitantes com as do resultado da pesquisa.
+     * Caso tenha, a chave existente antes da consulta será substituida.Certifique-se também de que o mapa tenha um handle <Object, Object[]>
+     * @param primaryKey O nome da coluna definida como Primary Key
+     * @param tabela Nome da tabela que será feita a consulta
+     * @param condicao Condicao que será aplicada na consulta
+     * @return Um Map da sua escolha tendo como Primary Key o rgistro na primeira coluna da tabela, e como conteudo um vetor de objetos com os registros
+     * @throws SQLException Caso ocorreu algo de errado na consulta
+     */
+    public Map<Object, Object[]> select(Map mapa, String primaryKey, String tabela, Condicao condicao) throws SQLException {
+        return this.select(mapa, primaryKey, null, tabela, condicao);
+    }
+
+    /**
+     * Será executado um comando do tipo SELECT no banco de dados definido nesse objeto DAO.
+     * @param mapa Instancia de Map ao qual será adicionado o resultados da pesquisa. O conteúdo que por ventura já estiver no mapa continurá lá, 
+     * será somente adicionado novas chaves nele, portanto certifique-se de que não tenha chaves conflitantes com as do resultado da pesquisa.
+     * Caso tenha, a chave existente antes da consulta será substituida.Certifique-se também de que o mapa tenha um handle <Object, Object[]>
+     * @param primaryKey O nome da coluna definida como Primary Key
+     * @param colunas Vetor com o nome das colunas que serão pesquisadas
+     * @param tabela Nome da tabela que será feita a consulta
+     * @return Um Map da sua escolha tendo como Primary Key o rgistro na primeira coluna da tabela, e como conteudo um vetor de objetos com os registros
+     * @throws SQLException Caso ocorreu algo de errado na consulta
+     */
+    public Map<Object, Object[]> select(Map mapa, String primaryKey, String[] colunas, String tabela) throws SQLException {
+        return this.select(mapa, primaryKey, null, tabela, null);
+    }
+    
+    /**
+     * Será executado um comando do tipo SELECT no banco de dados definido nesse objeto DAO.
+     * @param mapa Instancia de Map ao qual será adicionado o resultados da pesquisa. O conteúdo que por ventura já estiver no mapa continurá lá, 
+     * será somente adicionado novas chaves nele, portanto certifique-se de que não tenha chaves conflitantes com as do resultado da pesquisa.
+     * Caso tenha, a chave existente antes da consulta será substituida.Certifique-se também de que o mapa tenha um handle <Object, Object[]>
+     * @param primaryKey O nome da coluna definida como Primary Key
+     * @param tabela Nome da tabela que será feita a consulta
+     * @return Um Map da sua escolha tendo como Primary Key o rgistro na primeira coluna da tabela, e como conteudo um vetor de objetos com os registros
+     * @throws SQLException Caso ocorreu algo de errado na consulta
+     */
+    public Map<Object, Object[]> select(Map mapa, String primaryKey, String tabela) throws SQLException {
+        return this.select(mapa, primaryKey, null, tabela, null);
+    }
+    
+    /**
+     * Será executado um comando do tipo SELECT no banco de dados definido nesse objeto DAO.
+     * @param mapa Instancia de Map ao qual será adicionado o resultados da pesquisa. O conteúdo que por ventura já estiver no mapa continurá lá, 
+     * será somente adicionado novas chaves nele, portanto certifique-se de que não tenha chaves conflitantes com as do resultado da pesquisa.
+     * Caso tenha, a chave existente antes da consulta será substituida.Certifique-se também de que o mapa tenha um handle <Object, Object[]>
+     * @param primaryKey O indice definida como Primary Key. O índice é calculdado como no Banco de Dados, ou seja, ele começa no 1, e não no0
+     * @param tabela Nome da tabela que será feita a consulta
+     * @param condicao Condicao que será aplicada na consulta
+     * @return Um Map da sua escolha tendo como Primary Key o rgistro na primeira coluna da tabela, e como conteudo um vetor de objetos com os registros
+     * @throws SQLException Caso ocorreu algo de errado na consulta
+     */
+    public Map<Object, Object[]> select(Map mapa, int primaryKey, String tabela, Condicao condicao) throws SQLException {
+        return this.select(mapa, primaryKey, null, tabela, condicao);
+    }
+
+    /**
+     * Será executado um comando do tipo SELECT no banco de dados definido nesse objeto DAO.
+     * @param mapa Instancia de Map ao qual será adicionado o resultados da pesquisa. O conteúdo que por ventura já estiver no mapa continurá lá, 
+     * será somente adicionado novas chaves nele, portanto certifique-se de que não tenha chaves conflitantes com as do resultado da pesquisa.
+     * Caso tenha, a chave existente antes da consulta será substituida.Certifique-se também de que o mapa tenha um handle <Object, Object[]>
+     * @param primaryKey O indice definida como Primary Key. O índice é calculdado como no Banco de Dados, ou seja, ele começa no 1, e não no0
+     * @param colunas Vetor com o nome das colunas que serão pesquisadas
+     * @param tabela Nome da tabela que será feita a consulta
+     * @return Um Map da sua escolha tendo como Primary Key o rgistro na primeira coluna da tabela, e como conteudo um vetor de objetos com os registros
+     * @throws SQLException Caso ocorreu algo de errado na consulta
+     */
+    public Map<Object, Object[]> select(Map mapa, int primaryKey, String[] colunas, String tabela) throws SQLException {
+        return this.select(mapa, primaryKey, colunas, tabela, null);
+    }
+    
+    /**
+     * Será executado um comando do tipo SELECT no banco de dados definido nesse objeto DAO.
+     * @param mapa Instancia de Map ao qual será adicionado o resultados da pesquisa. O conteúdo que por ventura já estiver no mapa continurá lá, 
+     * será somente adicionado novas chaves nele, portanto certifique-se de que não tenha chaves conflitantes com as do resultado da pesquisa.
+     * Caso tenha, a chave existente antes da consulta será substituida.Certifique-se também de que o mapa tenha um handle <Object, Object[]>
+     * @param primaryKey O indice definida como Primary Key. O índice é calculdado como no Banco de Dados, ou seja, ele começa no 1, e não no0
+     * @param tabela Nome da tabela que será feita a consulta
+     * @return Um Map da sua escolha tendo como Primary Key o rgistro na primeira coluna da tabela, e como conteudo um vetor de objetos com os registros
+     * @throws SQLException Caso ocorreu algo de errado na consulta
+     */
+    public Map<Object, Object[]> select(Map mapa, int primaryKey, String tabela) throws SQLException {
+        return this.select(mapa, primaryKey, null, tabela, null);
+    }
+    
+    /**
      * Executa um comando do tipo DELETE no banco de dados dfinido nesse objeto DAO
      * @param tabela Nome da tabela em que será executado o comando
      * @param condicao Condição que será aplicada na exclusão
@@ -441,7 +625,7 @@ public class DAO {
         return pstmt;
     }
     
-    private int getPrimaryKey(ResultSet rs, ResultSetMetaData metaData, int collumnCount, String primaryKey) throws SQLException {
+    private int getPrimaryKey(ResultSetMetaData metaData, int collumnCount, String primaryKey) throws SQLException {
         for (int i = 1; i <= collumnCount; i++) {
             if (metaData.getColumnName(i).equals(primaryKey)) {
                 return i;

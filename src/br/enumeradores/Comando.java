@@ -5,7 +5,16 @@ package br.enumeradores;
  */
 public enum Comando {
     
-    WHERE("WHERE"), EQUALS("="), LIKE("LIKE"), INNER_JOIN("INNER JOIN"), AND("AND"), OR("OR"), ON("ON"), GROUP_BY("GROUP BY"), IS("IS");
+    WHERE("WHERE"), 
+    EQUALS("="), 
+    LIKE("LIKE"), 
+    INNER_JOIN("INNER JOIN"), 
+    AND("AND"), 
+    OR("OR"), 
+    ON("ON"), 
+    GROUP_BY("GROUP BY"), 
+    IS("IS"),
+    LIMIT("LIMIT");
     
     private String info;
     
