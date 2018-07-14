@@ -9,27 +9,18 @@ import java.util.Stack;
  */
 public class Condicao {
 
-    private String info;
-    private Stack<NoCondicao> coordenadas;
-        
+    private String sql;
+    private Stack<NoCondicao> condicoes;
+
     public Condicao() {
-        info = "";
-        coordenadas = new Stack();
-    }
-
-    public String getInfo() {
-        return info;
-    }
-
-    @Override
-    public String toString() {
-        return this.info;
+        this.sql = "";
+        this.condicoes = new Stack();
     }
     
     private void addNo(Comando novo) {
         Comando ultimo = null;
-        if(!coordenadas.empty()) {
-            ultimo = this.coordenadas.peek().getComando();
+        if(!condicoes.empty()) {
+            ultimo = this.condicoes.peek().getComando();
         }
         if(ultimo == Comando.LIMIT) {
             throw new IllegalArgumentException("Não é possível adicionar nenhum comando após o LIMIT!");
@@ -37,39 +28,39 @@ public class Condicao {
         if(ultimo == Comando.GROUP_BY && novo != Comando.LIMIT) {
             throw new IllegalArgumentException("Após o comando GROUP BY, só é possível adicionar o comando LIMIT!");
         }
-        if(novo == Comando.WHERE && coordenadas.size() > 0) {
+        if(novo == Comando.WHERE && condicoes.size() > 0) {
             throw new IllegalArgumentException("O comando WHERE deve ser o primeiro a ser adicionado!");
         }
-        coordenadas.add(new NoCondicao(info.length(), novo));
+        this.condicoes.add(new NoCondicao(sql.length(), novo));
     }
     
     public Condicao addLike(String coluna, Object valor) {
         this.addNo(Comando.LIKE);
-        info += " " + coluna + " " + Comando.LIKE + " " + StringUtil.setAspas("%" + valor + "%");
+        this.sql += " " + coluna + " " + Comando.LIKE + " " + StringUtil.setAspas("%" + valor + "%");
         return this;
     }
     
     public Condicao addLikeFirst(String coluna, Object valor) {
         this.addNo(Comando.LIKE);
-        info += " " + coluna + " " + Comando.LIKE + " " + StringUtil.setAspas("%" + valor);
+        this.sql += " " + coluna + " " + Comando.LIKE + " " + StringUtil.setAspas("%" + valor);
         return this;
     }
     
     public Condicao addLikeLast(String coluna, Object valor) {
         this.addNo(Comando.LIKE);
-        info += " " + coluna + " " + Comando.LIKE + " " + StringUtil.setAspas(valor + "%");
+        this.sql += " " + coluna + " " + Comando.LIKE + " " + StringUtil.setAspas(valor + "%");
         return this;
     }
     
     public Condicao addWhere() {
         this.addNo(Comando.WHERE);
-        info += " " + Comando.WHERE;
+        this.sql += " " + Comando.WHERE;
         return this;
     }
     
     public Condicao addInnerJoin(String tabelaAtual, String tabelaJoin, String primeiraColuna, String segundaColuna) {
         this.addNo(Comando.INNER_JOIN);
-        info += " " 
+        this.sql += " " 
                 + Comando.INNER_JOIN
                 + " "
                 + tabelaJoin
@@ -84,7 +75,7 @@ public class Condicao {
     
     public Condicao addInnerJoin(String tabelaAtual, String tabelaJoin, String coluna) {
         this.addNo(Comando.INNER_JOIN);
-        info += " " 
+        this.sql += " " 
                 + Comando.INNER_JOIN
                 + " "
                 + tabelaJoin
@@ -99,7 +90,7 @@ public class Condicao {
     
     public Condicao addEquals(String coluna, Object valor) {
         this.addNo(Comando.EQUALS);
-        info += " " 
+        this.sql += " " 
                 + coluna 
                 + (valor == null || valor.equals("null") ? 
                     " " + Comando.IS + " null" 
@@ -110,32 +101,37 @@ public class Condicao {
     
     public Condicao addAnd() {
         this.addNo(Comando.AND);
-        info += " " + Comando.AND;
+        this.sql += " " + Comando.AND;
         return this;
     }
     
     public Condicao addOr() {
         this.addNo(Comando.OR);
-        info += " " + Comando.OR;
+        this.sql += " " + Comando.OR;
         return this;
     }
 
     public Condicao addGroupBy(String coluna) {
         this.addNo(Comando.GROUP_BY);
-        info += " " + Comando.GROUP_BY + " " + coluna;
+        this.sql += " " + Comando.GROUP_BY + " " + coluna;
         return this;
     }
     
     public Condicao addLimit(int limite) {
         this.addNo(Comando.LIMIT);
-        info += " " + Comando.LIMIT + " " + limite;
+        this.sql += " " + Comando.LIMIT + " " + limite;
         return this;
     }
     
     public void undo() {
         try {
-            info = this.info.substring(0, this.coordenadas.pop().getInicio());
+            this.sql = this.sql.substring(0, this.condicoes.pop().getInicio());
         } catch (Exception e) {}
+    }
+
+    @Override
+    public String toString() {
+        return this.sql;
     }
     
 }

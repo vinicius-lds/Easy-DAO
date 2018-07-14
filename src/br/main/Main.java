@@ -1,33 +1,44 @@
 package br.main;
 
-import br.enumeradores.Mapa;
+import br.interfaces.Bean;
+import br.vo.CollectionFactory;
 import br.vo.Condicao;
-import br.vo.DAO;
+import br.vo.dao.DAO;
+import br.vo.dao.SelectDAO;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author Vinícius Luis da Silva
  */
 public class Main {
 
-    public static void main(String[] args) throws SQLException {
+    public static void main(String[] args) throws Exception {
         DAO d = new DAO("root", "", "jdbc:mysql://localhost:3306/teste");
-        Condicao c = new Condicao().addWhere().addEquals("id", "3");
-        LinkedHashMap<Object, Object[]> resultado = new LinkedHashMap<>();// = (LinkedHashMap<Object, Object[]>)d.select(Mapa.LINKED_HASH_MAP, 1, "teste", c);
-        d.select(resultado, 1, null, "teste", null);
-        System.out.println(resultado.get(3)[0]);
-        //d.update("teste", new String[]{"nome"}, new String[]{"Vinícius Luis da Silva"}, c);
-        //resultado = (LinkedHashMap<Object, Object[]>)d.select(Mapa.LINKED_HASH_MAP, 1, "teste", c);
-        System.out.println(resultado.get(3)[0]);
-        //d.insert("teste", new String[]{"nome"}, new String[][]{{"Larissa"},{"Bertrand"}, {"Thays"}, {"Matheus"}});
-        //resultado = (LinkedHashMap<Object, Object[]>)d.select(Mapa.LINKED_HASH_MAP, 1, "teste");
-        System.out.println(resultado.get(3)[0]);
-        System.out.println(resultado.get(4)[0]);
-        System.out.println(resultado.get(5)[0]);
-        System.out.println(resultado.get(6)[0]);
-        System.out.println(resultado.get(7)[0]);
-//        System.out.println(resultado.get(8)[0]);
+        //Collection resultado = d.select(Colecao.ARRAY_LIST, "teste");
+        //resultado = resultado.stream().filter((t) -> (Integer)t[0] < 5).limit(1).collect(Collectors.toList());
+        //System.out.println(((ArrayList<Object[]>)resultado).get(0)[1]);;
+        
+        HashMap<Object, Teste> mapa = new HashMap();
+        ArrayList<Teste> collecion = new ArrayList<>();
+        d.select(null, "teste", null).setBean(Teste.class).populateMap(mapa);
+        System.out.println(mapa);
+        
+        d.select("teste").setBean(Teste.class).populateCollection(collecion);
+        System.out.println(collecion);
+        
+        /*SelectDAO sd = new SelectDAO();
+        sd.getPrimaryKey("teste");*/
+    }
+    
+    public static void teste(Class<? extends Main> classe) {
+        
     }
 
 }

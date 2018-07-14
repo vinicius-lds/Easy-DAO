@@ -28,10 +28,9 @@ public abstract class StringUtil {
      * @return Uma String no formato 01/01/1900
      */
     public static String dateToString(Date date) {
-        String str = (((date.getDate()) < 10) ? "0" + date.getDate() : date.getDate() + "") 
+        return (((date.getDate()) < 10) ? "0" + date.getDate() : date.getDate() + "") 
                 + (((date.getMonth() + 1) < 10) ? "0" + (date.getMonth() + 1): (date.getMonth() + 1) + "")
                 + (date.getYear() + 1900);
-        return str;
     }
     
 }
