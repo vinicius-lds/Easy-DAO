@@ -8,9 +8,18 @@ import java.sql.Date;
 public abstract class StringUtil {
     
     /**
-     * @return A prórpia String para como parametro entre Aspas Duplas ("")
+     * @return A prórpia String para como parametro entre Aspas Duplas (""), e com todos os caracteres 
+     * ' e " removidos.
      */
     public static String setAspas(String str) {
+        if(str.contains("\"")) {
+            for(int i = 0; i < str.length(); i++) {
+                if(str.charAt(i) == '"' || str.charAt(i) == '\\') {
+                    str = str.substring(0, i) + "\\" + str.substring(i, str.length());
+                    i++;
+                }
+            }
+        }
         return "\"" + str + "\"";
     }
     

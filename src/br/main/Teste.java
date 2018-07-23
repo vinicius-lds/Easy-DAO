@@ -18,21 +18,13 @@ public class Teste implements Bean {
 
     @Override
     public void initialize(Object[] atributos) {
-        System.out.println("oi");
         this.id = (atributos[0] == null) ? 0 : (int) atributos[0];
         this.nome = (String) atributos[1];
-    }
-
-    @Override
-    public Object getPrimaryKey() {
-        return this.id;
     }
 
     @Override
     public String toString() {
         return this.id + " - " + this.nome; 
     }
-    
-    
     
 }

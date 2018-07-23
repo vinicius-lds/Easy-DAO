@@ -39,8 +39,8 @@ public class DAO {
      * @param valores Vetor com os novos valores
      * @throws SQLException Caso ocorrer algum erro na execução do comando
      */
-    public void insert(String tabela, String[] colunas, String[] valores) throws SQLException {
-        this.insert(tabela, colunas, new String[][]{valores});
+    public void insert(String tabela, String[] colunas, Object[] valores) throws SQLException {
+        this.insert(tabela, colunas, new Object[][]{valores});
     }
 
     /**
@@ -50,11 +50,11 @@ public class DAO {
      * @param valores Vetor bidimensional com os novos valores
      * @throws SQLException Caso ocorrer algum erro na execução do comando
      */
-    public void insert(String tabela, String[] colunas, String[][] valores) throws SQLException {
+    public void insert(String tabela, String[] colunas, Object[][] valores) throws SQLException {
         if (tabela == null) {
             throw new IllegalArgumentException("O nome da tabela não pode ser nulo!");
         }
-        if (tabela.isEmpty()) {
+        if (tabela.toString().isEmpty()) {
             throw new IllegalArgumentException("O nome da tabela não pode ser vazio!");
         }
         if (valores == null) {
@@ -76,7 +76,7 @@ public class DAO {
             }
             sql += "(";
             for (int j = 0; j < valores[i].length; j++) {
-                sql += ((valores[i][j] == null) ? "null" : StringUtil.setAspas(valores[i][j])) + ", ";
+                sql += ((valores[i][j] == null) ? "null" : StringUtil.setAspas(valores[i][j].toString())) + ", ";
             }
             sql = sql.substring(0, sql.length() - 2) + "), ";
         }
@@ -92,11 +92,11 @@ public class DAO {
      * @param condicao Condição que será aplicada no comando
      * @throws SQLException Caso ocorrer algum erro na execução do comando
      */
-    public void update(String tabela, String[] colunas, String[] valores, Condicao condicao) throws SQLException {
+    public void update(String tabela, String[] colunas, Object[] valores, Condicao condicao) throws SQLException {
         if (tabela == null) {
             throw new IllegalArgumentException("O nome da tabela não pode ser nulo!");
         }
-        if (tabela.isEmpty()) {
+        if (tabela.toString().isEmpty()) {
             throw new IllegalArgumentException("O nome da tabela não pode ser vazio!");
         }
         if (valores == null) {
@@ -122,13 +122,13 @@ public class DAO {
             if (valores[i] == null) {
                 throw new IllegalArgumentException("Nenhum valor pode ser nulo!");
             }
-            if (colunas[i].isEmpty()) {
+            if (colunas[i].toString().isEmpty()) {
                 throw new IllegalArgumentException("Nenhuma coluna pode conter uma string vazia!");
             }
-            if (valores[i].isEmpty()) {
+            if (valores[i].toString().isEmpty()) {
                 throw new IllegalArgumentException("Nenhum valor pode conter uma string vazia!");
             }
-            sql += colunas[i] + " = " + StringUtil.setAspas(valores[i]) + ", ";
+            sql += colunas[i] + " = " + StringUtil.setAspas(valores[i].toString()) + ", ";
         }
         sql = sql.substring(0, sql.length() - 2) + condicao;
         this.executarComando(sql).close();
@@ -146,7 +146,7 @@ public class DAO {
         if (tabela == null) {
             throw new IllegalArgumentException("O nome da tabela não pode ser nulo!");
         }
-        if (tabela.isEmpty()) {
+        if (tabela.toString().isEmpty()) {
             throw new IllegalArgumentException("O nome da tabela não pode ser vazio!");
         }
         String sql = "SELECT ";
@@ -167,8 +167,7 @@ public class DAO {
         sd.clear();
         sd.setDaoObject(this);
         sd.setResultSet(rs);
-        sd.setTabelaQuery(tabela);
-        sd.initialize();
+        sd.setTabelaQuery(tabela.toString());
         return sd;
     }
 
@@ -210,7 +209,7 @@ public class DAO {
      * @param condicao Condição que será aplicada na exclusão
      * @throws SQLException Caso ocorrer algo de errado na exclusão
      */
-    public void delete(String tabela, Condicao condicao) throws SQLException {
+    public void delete(Object tabela, Condicao condicao) throws SQLException {
         String sql = "DELETE FROM " + tabela + condicao;
         this.executarComando(sql).close();
     }

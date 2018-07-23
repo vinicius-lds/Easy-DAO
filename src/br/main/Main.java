@@ -21,20 +21,13 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         DAO d = new DAO("root", "", "jdbc:mysql://localhost:3306/teste");
-        //Collection resultado = d.select(Colecao.ARRAY_LIST, "teste");
-        //resultado = resultado.stream().filter((t) -> (Integer)t[0] < 5).limit(1).collect(Collectors.toList());
-        //System.out.println(((ArrayList<Object[]>)resultado).get(0)[1]);;
-        
-        HashMap<Object, Teste> mapa = new HashMap();
-        ArrayList<Teste> collecion = new ArrayList<>();
-        d.select(null, "teste", null).setBean(Teste.class).populateMap(mapa);
-        System.out.println(mapa);
-        
-        d.select("teste").setBean(Teste.class).populateCollection(collecion);
-        System.out.println(collecion);
-        
-        /*SelectDAO sd = new SelectDAO();
-        sd.getPrimaryKey("teste");*/
+        long inicio = System.nanoTime();
+        HashMap<Object, Teste> rs = d.select(new String[] {"id"}, "teste", new Condicao().where().equals("id", "\\\\\" or 1=1 #")).setBean(Teste.class).toMap();
+        //HashMap<Object, Object[]> rs = d.select(new String[] {"id"}, "teste").toMap();
+        //ArrayList<Teste> rs = d.select("teste").setBean(Teste.class).toCollection();
+        //ArrayList<Object[]> rs = d.select("teste").toCollection();
+        System.out.println(((System.nanoTime() - inicio) / 1000000000.0) + " segundos!");
+        System.out.println(rs);
     }
     
     public static void teste(Class<? extends Main> classe) {

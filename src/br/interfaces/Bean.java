@@ -13,6 +13,4 @@ public interface Bean {
      */
     public void initialize(Object[] atributos);
     
-    public Object getPrimaryKey();
-    
 }
