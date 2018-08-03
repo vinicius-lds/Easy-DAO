@@ -1,10 +1,6 @@
 package br.vo.dao;
 
-import br.enumeradores.Colecao;
-import br.enumeradores.Mapa;
 import br.interfaces.Bean;
-import br.vo.CollectionFactory;
-import br.vo.MapFactory;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -13,7 +9,16 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Stack;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.Vector;
 
 /**
  * @author Vinícius Luis da Silva
@@ -76,16 +81,52 @@ public class SelectDAO {
         this.queryTable = tabela;
     }
 
-    public ArrayList toCollection() throws SQLException {
+    public ArrayList toArrayList() throws SQLException {
         ArrayList list = new ArrayList();
         this.populateCollection(list);
         return list;
     }
-
-    public Collection generateCollection(Colecao colecao) throws SQLException {
-        Collection c = CollectionFactory.get(colecao);
-        this.populateCollection(c);
-        return c;
+    
+    public TreeSet toTreeSet() throws SQLException {
+        TreeSet set = new TreeSet();
+        this.populateCollection(set);
+        return set;
+    }
+    
+    public HashSet toHashSet() throws SQLException {
+        HashSet set = new HashSet();
+        this.populateCollection(set);
+        return set;
+    }
+    
+    public LinkedHashSet toLinkedHashSet() throws SQLException {
+        LinkedHashSet set = new LinkedHashSet();
+        this.populateCollection(set);
+        return set;
+    }
+    
+    public Vector toVector() throws SQLException {
+        Vector vector = new Vector();
+        this.populateCollection(vector);
+        return vector;
+    }
+    
+    public Stack toStack() throws SQLException {
+        Stack stack = new Stack();
+        this.populateCollection(stack);
+        return stack;
+    }
+    
+    public LinkedList toLinkedList() throws SQLException {
+        LinkedList list = new LinkedList();
+        this.populateCollection(list);
+        return list;
+    }
+    
+    public PriorityQueue toPriorityQueue() throws SQLException {
+        PriorityQueue queue = new PriorityQueue();
+        this.populateCollection(queue);
+        return queue;
     }
 
     public void populateCollection(Collection colecao) throws SQLException {
@@ -100,14 +141,20 @@ public class SelectDAO {
         this.mainResultSet.close();
     }
 
-    public HashMap toMap() throws SQLException {
+    public HashMap toHashMap() throws SQLException {
         HashMap map = new HashMap();
         this.populateMap(map);
         return map;
     }
-
-    public Map generateMap(Mapa mapa) throws SQLException {
-        Map map = MapFactory.get(mapa);
+    
+    public TreeMap toTreeMap() throws SQLException {
+        TreeMap map = new TreeMap();
+        this.populateMap(map);
+        return map;
+    }
+    
+    public LinkedHashMap toLinkedHashMap() throws SQLException {
+        LinkedHashMap map = new LinkedHashMap();
         this.populateMap(map);
         return map;
     }
